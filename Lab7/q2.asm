@@ -1,10 +1,10 @@
 .model tiny
 .data
-msg1 db "enter 10 character long User Name: $"  ; prompt to enter the username
+msg1 db "enter User Name: $"  ; prompt to enter the username
 max1 db 20  ; max length for input
 act1 db ?   ; placeholder for action
 inp1 db 20 dup("$") ; buffer to store user's input for username
-msg2 db "enter 5 character long password: $"    ; prompt to enter the password
+msg2 db "enter password: $"    ; prompt to enter the password
 inp2 db 30 dup("$")    ; buffer to store user's input for password
 msg3 db "hello $"   ; greeting message when both inputs are correct
 msg4 db "wrong username$"   ; wrong username input
@@ -14,7 +14,9 @@ fname1 db "MuP-Labs/Lab7/user.txt", 0
 handle1 dw ?
 fname2 db "MuP-Labs/Lab7/pswd.txt", 0
 handle2 dw ?
+fmax1 db 11
 usn1 db 20 dup("$")   ; correct username for comparison
+fmax2 db 6
 pass1 db 30 dup("$")    ; correct password for comparison
 
 .code
@@ -45,7 +47,8 @@ pass1 db 30 dup("$")    ; correct password for comparison
     ; read content into inp1
     mov ah, 3fh
     mov bx, handle1
-    mov cx, 11
+    mov cl, fmax1
+    mov ch, 00h
     lea dx, usn1
     int 21h
     
@@ -57,7 +60,7 @@ pass1 db 30 dup("$")    ; correct password for comparison
     cld
     lea di, inp1
     lea si, usn1
-    mov cx, 11
+    mov cl, fmax1
     repe cmpsb
     jcxz l1
 
@@ -71,7 +74,6 @@ pass1 db 30 dup("$")    ; correct password for comparison
     mov ah, 4ch
     int 21h
 
-    ; --------------------------PASSWORD-----------------------------
     ; if the username is correct, display the "enter password" message
     l1:
     lea dx, nline
@@ -84,8 +86,27 @@ pass1 db 30 dup("$")    ; correct password for comparison
     mov ah, 09h
     int 21h
 
+    ; --------------------------PASSWORD-----------------------------
+    ; open password.txt
+    mov ah, 3dh
+    mov al, 0h
+    lea dx, fname2
+    int 21h
+    mov handle2, ax
+
+    ; read content into inp2
+    mov ah, 3fh
+    mov bx, handle2
+    mov cl, fmax2
+    lea dx, pass1
+    int 21h
+    
+    ; close password.txt
+    mov ah, 3eh
+    int 21h
+
     ; take password input from the user, making the characters
-    mov cx, 6
+    mov cl, fmax2
     lea di, inp2
     l2:
     mov ah, 08h
@@ -98,27 +119,9 @@ pass1 db 30 dup("$")    ; correct password for comparison
     dec cx
     jnz l2
 
-    ; open password.txt
-    mov ah, 3dh
-    mov al, 0h
-    lea dx, fname2
-    int 21h
-    mov handle2, ax
-
-    ; read content into inp2
-    mov ah, 3fh
-    mov bx, handle2
-    mov cx, 6
-    lea dx, pass1
-    int 21h
-    
-    ; close password.txt
-    mov ah, 3eh
-    int 21h
-
     ; compare the entered password with the stored password
     cld
-    mov cx, 6
+    mov cl, fmax2
     lea di, inp2
     lea si, pass1
     repe cmpsb
